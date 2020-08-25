@@ -9,7 +9,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 
-<title>人脸核验系统</title>
+<title>DEMO</title>
 
 <link rel="stylesheet" href="css/all.css">
 <script src="js/all.js"></script>
@@ -301,6 +301,12 @@ var app = new Vue({
 				dataType: 'json',
 				success: function(re){
 
+					if(re.rspHead.retCode == '1'){
+						_this.toast({message:re.rspHead.retMsg})
+					}else{
+						_this.toast({message:re.rspHead.retMsg})
+					}
+
 				}
 			})
 
@@ -316,7 +322,6 @@ var app = new Vue({
 		this.page = 1
 
 		this.loading = 0
-
 
 	}
 })
