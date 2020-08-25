@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=0.9, user-scalable=no">
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Cache" content="no-cache">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<title>人脸核验系统</title>
+
+<link rel="stylesheet" href="css/all.css">
+<script src="js/all.js"></script>
+
+</head>
+<body>
+
+<div id="app">
+
+	<div class="debug" style="display: none;">
+		debug:<br>
+	</div>
+
+
+	<div v-if="page == 0">
+		loading ...
+	</div>
+
+
+	<div v-if="page == 1">
+
+		<div class="weui-form__control-area">
+			<div class="weui-cells__group weui-cells__group_form">
+				<div class="weui-cells weui-cells_form">
+					<div class="weui-cell weui-cell_active">
+						<div class="weui-cell__hd"><label class="weui-label">身份证号</label></div>
+						<div class="weui-cell__bd">
+							<input id="js_input" class="weui-input" placeholder="填写本人身份证号" v-model="a.identityCard">
+						</div>
+					</div>
+					<div class="weui-cell weui-cell_active">
+						<div class="weui-cell__hd"><label class="weui-label">姓名</label></div>
+						<div class="weui-cell__bd">
+							<input id="js_input" class="weui-input" placeholder="填写本人姓名" v-model="a.realName">
+						</div>
+					</div>
+					<div class="weui-cell weui-cell_active">
+						<div class="weui-cell__hd"><label class="weui-label">手机号</label></div>
+						<div class="weui-cell__bd">
+							<input id="js_input" class="weui-input" placeholder="填写绑定的手机号" v-model="a.mobile">
+						</div>
+					</div>
+					<div class="weui-cell">
+						<div><label class="weui-label">自拍照</label></div>
+
+						<label v-if="a.liveImgCode == ''">
+							<img src="img/input-upload.gif" width="100" height="100">
+							<input type="file" style="display:none" accept="image/*"
+							id="upload_input" @change="选图()">
+						</label>
+
+						<img :src="`${a.liveImgCode}`" width="100" height="100" v-if="a.liveImgCode != ''">
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="weui-form__opr-area">
+			<a :class="`weui-btn weui-btn_${
+			a.identityCard != '' &&
+			a.realName != '' &&
+			a.mobile != '' &&
+			a.liveImg != '' ?
+			'primary':'disabled'}`"
+			href="javascript:;" @click="检验()"
+			>核验</a>
+		</div>
+
+	</div>
+
+
+
+	<div v-if="loading == 1">
+		<div class="weui-mask_transparent"></div>
+		<div class="weui-toast">
+			<i class="weui-loading weui-icon_toast"></i>
+			<p class="weui-toast__content">数据加载中</p>
+		</div>
+	</div>
+
+	<div class="js_dialog" v-if="alert != ''">
+		<div class="weui-mask"></div>
+		<div class="weui-dialog">
+			<div class="weui-dialog__hd"><strong class="weui-dialog__title">{{alert.title ? alert.title:'提示'}}</strong></div>
+			<div class="weui-dialog__bd">{{alert.message}}</div>
+			<div class="weui-dialog__ft">
+
+				<template v-if="alert.close != 'no'">
+					<a class="weui-dialog__btn weui-dialog__btn_default"
+					href="javascript:;"
+					v-if="alert.close == 'wx'"
+					@click="wx_close()">关闭</a>
+
+					<a class="weui-dialog__btn weui-dialog__btn_default"
+					href="javascript:;"
+					v-if="alert.close == undefined"
+					@click="alert = ''">关闭</a>
+
+				</template>
+
+				<a class="weui-dialog__btn weui-dialog__btn_primary"
+				:href="`${alert.ok_url}`"
+				v-if="alert.ok_url != undefined">{{alert.ok_title ? alert.ok_title:'确定'}}</a>
+
+			</div>
+		</div>
+	</div>
+
+</div><!--app-->
+
+
+<script src="js/exif.min.js"></script>
+<script>
+var app = new Vue({
+	el: '#app',
+	data:{
+		page: 0,
+		loading: 1,
+		alert: '',
+
+		a: {
+			identityCard: '',
+			realName: '',
+			mobile: '',
+			liveImg: '',
+			liveImgCode: '',//仅预览用
+		}
+
+	},
+	methods:{
+		toast: function(json){
+			this.alert = json
+		},
+		toast_close: function(){
+			this.alert = ''
+		},
+		wx_close: function(){
+			WeixinJSBridge.invoke('closeWindow',{},function(res){})
+		},
+		debug: function(log){
+			$('.debug').html( $('.debug').html() + log + '<br>' )
+		},
+
+		debug: function(log){
+
+			$('.debug').html( $('.debug').html() + log + '<br>' )
+		},
+
+		选图: function(){
+			var _this = this
+
+			var file = $('#upload_input')[0].files[0]
+			// console.log(file)
+
+			// 方向 1=0° 6=顺时针90° 8=逆时针90° 3=180°
+			var Orientation
+			EXIF.getData(file, function(){
+
+				Orientation = EXIF.getTag(this, 'Orientation')
+
+				//创建一个文件读取的工具类
+				var reader = new FileReader()
+
+				reader.onload = function(e){
+
+					// console.log(this.result)//原base64码
+
+					_this.压图(this.result, Orientation)
+				}
+
+				//告诉文件读取工具类读取那个文件
+				reader.readAsDataURL(file)
+
+			})
+		},
+		压图:function(src, Orientation){
+			var _this = this
+
+			// 需要压缩的最大尺寸
+			var MAX_SIZE = 500
+
+			//创建Image对象
+			var image = new Image()
+
+			image.src = src
+			image.onload = function(){
+
+				_this.debug('压前：' + image.width + ' x ' + image.height)
+
+				//宽大于高的情况
+				if (image.width > MAX_SIZE && image.width >= image.height){
+					image.height *= MAX_SIZE / image.width
+					image.width = MAX_SIZE
+				}
+				//宽小于高的情况
+				if (image.height > MAX_SIZE && image.height > image.width){
+					image.width *= MAX_SIZE / image.height
+					image.height = MAX_SIZE
+				}
+
+				_this.debug('压后：' + image.width + ' x ' + image.height)
+
+				var canvas = document.createElement("canvas")
+
+				//获取2d画布
+				var ctx = canvas.getContext("2d")
+				canvas.width = image.width
+				canvas.height = image.height
+
+				ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+				// 摆正
+				switch(Orientation){
+					case 6:// 旋转90度
+						canvas.width = image.height
+						canvas.height = image.width
+						ctx.rotate(Math.PI / 2)
+						ctx.drawImage(image, 0, -image.height, image.width, image.height)
+						break
+					case 3:// 旋转180度
+						ctx.rotate(Math.PI)
+						ctx.drawImage(image, -image.width, -image.height, image.width, image.height)
+						break
+					case 8:// 旋转-90度
+						canvas.width = image.height
+						canvas.height = image.width
+						ctx.rotate(3 * Math.PI / 2)
+						ctx.drawImage(image, -image.width, 0, image.width, image.height)
+						break
+					
+					default:
+						ctx.drawImage(image, 0, 0, image.width, image.height)
+						break
+				}
+
+				//生成base64码
+				var base64Code = canvas.toDataURL("image/jpeg")
+				_this.a.liveImgCode = base64Code
+
+				//丢掉 data:image/jpeg;base64,
+				var base64Code2 = base64Code
+				// .replace('data:image/jpeg;base64,', '')
+
+				//把base64码放入input
+				// $('input[name="liveImg"]').val(base64Code2)
+				_this.a.liveImg = base64Code2
+			}
+
+		},
+
+		检验: function(){
+			var _this = this
+
+			if( this.a.identityCard == ''
+				|| this.a.realName == ''
+				|| this.a.mobile == ''
+				|| this.a.liveImg == '' ){
+				return
+			}
+
+			var data = {
+	"reqHead": {
+		"clientType": 10,
+		"appVersion": "1.0",
+		"osVersion": "安卓4.2.1",
+		"imei": "设备号",
+		"mobileModel": "S1",
+		"mobileManufacturer": "小米",
+		"identificationCode": "KSJALFAJIEALJF1212321",
+		"lat": "1",
+		"lng": "1",
+		"format": "json",
+		"version": "1.0",
+		"sign": "e3db102d38419ee4eb6626325757682d"
+	},
+	"reqBody": {
+		"identifier":"tanjing-h5",
+		"realName":this.a.realName,
+		"identityCard":this.a.identityCard,
+		"liveImg":this.a.liveImg
+	}
+}
+
+			$.ajax({
+				type: 'POST',
+				url: 'http://app.zzb110.cn/zzb/app/h5MchFaceRecognition/interface',
+				data: JSON.stringify(data),
+				dataType: 'json',
+				success: function(re){
+
+				}
+			})
+
+		}
+
+	},
+	mounted(){
+		_this = this
+
+		console.log('vue is ready')
+
+
+		this.page = 1
+
+		this.loading = 0
+
+
+	}
+})
+</script>
+</body>
+</html>
