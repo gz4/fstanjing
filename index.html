@@ -37,19 +37,19 @@
 					<div class="weui-cell weui-cell_active">
 						<div class="weui-cell__hd"><label class="weui-label">身份证号</label></div>
 						<div class="weui-cell__bd">
-							<input id="js_input" class="weui-input" placeholder="填写本人身份证号" v-model="a.identityCard">
+							<input class="weui-input" placeholder="填写本人身份证号" v-model="a.identityCard">
 						</div>
 					</div>
 					<div class="weui-cell weui-cell_active">
 						<div class="weui-cell__hd"><label class="weui-label">姓名</label></div>
 						<div class="weui-cell__bd">
-							<input id="js_input" class="weui-input" placeholder="填写本人姓名" v-model="a.realName">
+							<input class="weui-input" placeholder="填写本人姓名" v-model="a.realName">
 						</div>
 					</div>
 					<div class="weui-cell weui-cell_active">
 						<div class="weui-cell__hd"><label class="weui-label">手机号</label></div>
 						<div class="weui-cell__bd">
-							<input id="js_input" class="weui-input" placeholder="填写绑定的手机号" v-model="a.mobile">
+							<input class="weui-input" placeholder="填写绑定的手机号" v-model="a.mobile">
 						</div>
 					</div>
 					<div class="weui-cell">
@@ -132,6 +132,7 @@ var app = new Vue({
 		alert: '',
 
 		a: {
+			key: getUrl('key'),
 			identityCard: '',
 			realName: '',
 			mobile: '',
@@ -188,6 +189,8 @@ var app = new Vue({
 		},
 		压图:function(src, Orientation){
 			var _this = this
+
+			this.loading = 1
 
 			// 需要压缩的最大尺寸
 			var MAX_SIZE = 500
@@ -257,12 +260,16 @@ var app = new Vue({
 				//把base64码放入input
 				// $('input[name="liveImg"]').val(base64Code2)
 				_this.a.liveImg = base64Code2
+
+				_this.loading = 0
 			}
 
 		},
 
 		检验: function(){
 			var _this = this
+
+			this.loading = 1
 
 			if( this.a.identityCard == ''
 				|| this.a.realName == ''
@@ -301,11 +308,43 @@ var app = new Vue({
 				dataType: 'json',
 				success: function(re){
 
-					if(re.rspHead.retCode == '1'){
+					if(re.rspHead.retCode != '1'){
+						_this.loading = 0
 						_this.toast({message:re.rspHead.retMsg})
-					}else{
-						_this.toast({message:re.rspHead.retMsg})
+						return
 					}
+
+
+					var data = {
+	"key": _this.a.key,
+	"realName": _this.a.realName,
+	"identityCard": _this.a.identityCard,
+	"selfPhoto": _this.a.liveImg,
+	"mobile": _this.a.mobile,
+}
+
+					$.ajax({
+						type: 'POST',
+						url: 'http://119.23.59.35:8081/selfVisit/apiZZB/recvAuth',
+						headers: {"Content-Type":"application/json"},
+						data: JSON.stringify(data),
+						dataType: 'json',
+						success: function(re){
+
+							_this.loading = 0
+
+							if(re.message != undefined){
+
+								_this.toast({message:re.message})
+								return
+							}
+
+							if(re.jumpUrl != undefined){
+
+								location.href = re.jumpUrl
+							}
+						}
+					})
 
 				}
 			})
