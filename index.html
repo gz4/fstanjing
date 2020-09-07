@@ -222,7 +222,7 @@ var app = new Vue({
 				if(ua.indexOf('iPhone') != -1){
 					var os = 'ios'
 				}
-				alert(os)
+				// alert(os)
 
 				if (os == 'android'){
 
@@ -254,26 +254,29 @@ var app = new Vue({
 
 					// 摆正
 					switch(Orientation){
-						case 6:// 旋转90度
+						case 6:// 旋转90度 开机在右 头在右
 							alert('旋转90度')
-							canvas.width = image.height
-							canvas.height = image.width
-							ctx.rotate(Math.PI / 2)
-							ctx.drawImage(image, 0, -image.height, image.width, image.height)
-							break
-						case 3:// 旋转180度
-							alert('旋转180度')
-							ctx.rotate(Math.PI)
-							ctx.drawImage(image, -image.width, -image.height, image.width, image.height)
-							break
-						case 8:// 旋转-90度
-							alert('旋转-90度')
 							canvas.width = image.height
 							canvas.height = image.width
 							ctx.rotate(3 * Math.PI / 2)
 							ctx.drawImage(image, -image.width, 0, image.width, image.height)
 							break
-						default:
+
+						case 3:// 旋转180度 开机在下 头在下
+							alert('旋转180度')
+							canvas.width = image.height
+							canvas.height = image.width
+							ctx.rotate(Math.PI / 2)
+							ctx.drawImage(image, 0, -image.height, image.width, image.height)
+							break
+
+						case 8:// 旋转-90度  开机在左 头在左
+							alert('旋转-90度')
+							ctx.rotate(Math.PI)
+							ctx.drawImage(image, -image.width, -image.height, image.width, image.height)
+							break
+
+						default:// 开机在上
 							alert('default')
 							ctx.drawImage(image, 0, 0, image.width, image.height)
 							break
