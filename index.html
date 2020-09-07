@@ -216,6 +216,14 @@ var app = new Vue({
 				var ua =  navigator.userAgent
 				alert(ua)
 
+				if(ua.indexOf('Android') != -1){
+					var os = 'android'
+				}
+				if(ua.indexOf('iPhone') != -1){
+					var os = 'ios'
+				}
+				alert(os)
+
 				// 摆正
 				switch(Orientation){
 					case 6:// 旋转90度
