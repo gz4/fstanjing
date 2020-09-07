@@ -226,30 +226,8 @@ var app = new Vue({
 
 				if (os == 'ios'){
 
-					alert('1607')
-
 					// 摆正
-					switch(Orientation){
-						case 6:// 旋转90度 开机在右 头在右
-							alert('旋转90度')
-							ctx.drawImage(image, 0, 0, image.width, image.height)
-							break
-
-						case 3:// 旋转180度 开机在下 头在下
-							alert('旋转180度')
-							ctx.drawImage(image, 0, 0, image.width, image.height)
-							break
-
-						case 8:// 旋转-90度 开机在左 头在左
-							alert('旋转-90度')
-							ctx.drawImage(image, 0, 0, image.width, image.height)
-							break
-
-						default:// 开机在上
-							alert('default')
-							ctx.drawImage(image, 0, 0, image.width, image.height)
-							break
-					}
+					ctx.drawImage(image, 0, 0, image.width, image.height)
 
 				}
 				else{
