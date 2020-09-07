@@ -216,16 +216,19 @@ var app = new Vue({
 				// 摆正
 				switch(Orientation){
 					case 6:// 旋转90度
+						alert(6)
 						canvas.width = image.height
 						canvas.height = image.width
 						ctx.rotate(Math.PI / 2)
 						ctx.drawImage(image, 0, -image.height, image.width, image.height)
 						break
 					case 3:// 旋转180度
+						alert(3)
 						ctx.rotate(Math.PI)
 						ctx.drawImage(image, -image.width, -image.height, image.width, image.height)
 						break
 					case 8:// 旋转-90度
+						alert(8)
 						canvas.width = image.height
 						canvas.height = image.width
 						ctx.rotate(3 * Math.PI / 2)
@@ -233,6 +236,7 @@ var app = new Vue({
 						break
 					
 					default:
+						alert('default')
 						ctx.drawImage(image, 0, 0, image.width, image.height)
 						break
 				}
@@ -310,7 +314,7 @@ var app = new Vue({
 
 					$.ajax({
 						type: 'POST',
-						url: 'http://119.23.59.35:8081/selfVisit/apiZZB/recvAuth',
+						url: 'https://selfvisit.fstanjing.com/selfVisit/apiZZB/recvAuth',
 						headers: {"Content-Type":"application/json"},
 						data: JSON.stringify(data),
 						dataType: 'json',
